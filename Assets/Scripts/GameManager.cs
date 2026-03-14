@@ -127,6 +127,7 @@ public class GameManager : MonoBehaviour
         }
         Debug.Log(matrix);
     }
+    
     private void ShowMatrixPos() //fa un debug log de la matriu
     {
         string matrix = "";
@@ -144,39 +145,36 @@ public class GameManager : MonoBehaviour
     //EL VOSTRE EXERCICI COMEN�A AQUI
     private Vector3 CalculateEnemyPosition(int row, int col)
     {
-        // Mismo mapeo que CalculatePosition:
-        // col 0 → x = -2.2,  col 1 → x = 0,  col 2 → x = 2.2
-        // row 0 → y =  2.2,  row 1 → y = 0,  row 2 → y = -2.2
         float x = (col - 1) * 2f * _distance;
         float y = (1 - row) * 2f * _distance;
         return new Vector3(x, y, 0);
     }
     private void EnemyResponse()
     {
-        // Comprobar si el tablero esta lleno antes de que la IA juegue
+        // Comprovar si el tauler esta ple abans que la IA jugui
         if (IsBoardFull(_gameMatrix)) return;
 
-        // Copiar el tablero actual como estado raiz
+        // Copiar el tauler actual com a estat arrel
         int[,] currentMatrix = (int[,])_gameMatrix.Clone();
 
-        // Crear nodo raiz: Team=1 (maximizer/IA), alpha=-infinito, beta=+infinito
+        // Crear node arrel: Team=1 (maximizer/IA), alpha=-infinit, beta=+infinit
         Node root = new Node(null, 1, -100, 100, -1, -1, currentMatrix);
 
-        // Ejecutar MinMax con poda alpha-beta
+        // Executar MinMax amb poda alpha-beta
         MinMax(root);
 
-        // Obtener la mejor jugada
+        // Obtenir la millor jugada
         if (root.BestChild != null)
         {
             int bestRow = root.BestChild.X;
             int bestCol = root.BestChild.Y;
 
-            Debug.Log("IA elige: [" + bestRow + "," + bestCol + "]");
+            Debug.Log("IA tria: [" + bestRow + "," + bestCol + "]");
 
-            // Actualizar la matriz del juego
+            // Actualitzar la matriu del joc
             if (CalculatePositionEnemy(bestRow, bestCol))
             {
-                // Obtener posicion mundo e instanciar la ficha
+                // Obtenir posicio mon i instanciar la fitxa
                 Vector3 enemyPos = CalculateEnemyPosition(bestRow, bestCol);
                 Instantiate(token2, enemyPos, Quaternion.identity);
             }
@@ -251,47 +249,47 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Algoritmo MinMax con poda Alpha-Beta.
-    /// Team 1 = maximizer (IA, valor 2 en la matriz del juego)
-    /// Team -1 = minimizer (jugador, valor 1 en la matriz del juego)
+    /// Algorisme MinMax amb poda Alpha-Beta.
+    /// Team 1 = maximizer (IA, valor 2 a la matriu del joc)
+    /// Team -1 = minimizer (jugador, valor 1 a la matriu del joc)
     /// </summary>
     private void MinMax(Node node)
     {
-        // Evaluar si es un estado terminal
+        // Avaluar si es un estat terminal
         int result = EvaluateMatrix(node.MatrixNode);
 
-        // Caso base: nodo terminal o tablero lleno
+        // Cas base: node terminal o tauler ple
         if (result != 0 || IsBoardFull(node.MatrixNode))
         {
-            if (result == 2)        // gana enemy (IA)
+            if (result == 2)        // guanya enemic (IA)
                 node.Value = 1;
-            else if (result == 1)   // gana player
+            else if (result == 1)   // guanya jugador
                 node.Value = -1;
             else
-                node.Value = 0;     // empate
+                node.Value = 0;     // empat
             return;
         }
 
-        // Generar hijos para cada celda vacia
+        // Generar fills per cada casella buida
         for (int i = 0; i < 3; i++)
         {
             for (int j = 0; j < 3; j++)
             {
                 if (node.MatrixNode[i, j] == 0)
                 {
-                    // Crear copia del tablero
+                    // Crear copia del tauler
                     int[,] childMatrix = (int[,])node.MatrixNode.Clone();
 
-                    // Colocar ficha segun el turno
+                    // Col·locar fitxa segons el torn
                     childMatrix[i, j] = node.Team == 1 ? 2 : 1;
 
-                    // Crear nodo hijo con el equipo contrario
+                    // Crear node fill amb l'equip contrari
                     Node child = new Node(node, -node.Team, node.Alpha, node.Beta, i, j, childMatrix);
 
-                    // Llamada recursiva
+                    // Crida recursiva
                     MinMax(child);
 
-                    // Propagacion de valores
+                    // Propagacio de valors
                     if (node.Team == 1) // Maximizer (IA)
                     {
                         if (child.Value > node.Value)
@@ -313,7 +311,7 @@ public class GameManager : MonoBehaviour
 
                     node.NodeChildren.Push(child);
 
-                    // Poda alpha-beta: si alpha >= beta, podar ramas restantes
+                    // Poda alpha-beta: si alpha >= beta, podar branques restants
                     if (node.Alpha >= node.Beta)
                     {
                         node.Pruned = true;
@@ -325,17 +323,17 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Evalua una matriz de juego arbitraria para determinar si hay un ganador.
-    /// Retorna: 0 = sin ganador, 1 = gana jugador, 2 = gana IA
+    /// Avalua una matriu de joc arbitraria per determinar si hi ha un guanyador.
+    /// Retorna: 0 = sense guanyador, 1 = guanya jugador, 2 = guanya IA
     /// </summary>
     private int EvaluateMatrix(int[,] matrix)
     {
         for (int i = 0; i < 3; i++)
         {
-            // Comprobar filas
+            // Comprovar files
             if (matrix[i, 0] != 0 && matrix[i, 0] == matrix[i, 1] && matrix[i, 1] == matrix[i, 2])
                 return matrix[i, 0];
-            // Comprobar columnas
+            // Comprovar columnes
             if (matrix[0, i] != 0 && matrix[0, i] == matrix[1, i] && matrix[1, i] == matrix[2, i])
                 return matrix[0, i];
         }
@@ -350,7 +348,7 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Comprueba si todas las celdas del tablero estan ocupadas.
+    /// Comprova si totes les caselles del tauler estan ocupades.
     /// </summary>
     private bool IsBoardFull(int[,] matrix)
     {
